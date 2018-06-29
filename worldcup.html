@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <title>Fetch API</title>
+</head>
+<body>
+        <script src="https://unpkg.com/rxjs/bundles/rxjs.umd.min.js"></script>
+    
+            <input type="text" id="ctry" placeholder="eneter country"><br />
+            <button id="hit">Go!</button>
+  
+    
+    
+    <div id="div1">
+	 <p id="p"></p>
+        <table id="table" style="border:1px solid red">
+            <tr>
+                <th>flag</th>
+                <th>Country</th>
+            </tr>
+        </table>
+    </div>
+
+    <script>
+        document.getElementById("hit").addEventListener("click",func4);
+        
+
+
+         async function func4(){
+
+             var country=document.getElementById("ctry").value;
+             console.log(country);
+            const { Observable, of, from } = rxjs;
+            const { map, filter,take } = rxjs.operators;
+
+            var data = fetch('https://raw.githubusercontent.com/lsv/fifa-worldcup-2018/master/data.json');
+            var resp= await data;
+            var jdata=await resp.json();
+
+            var teams = jdata.teams;
+            var groups = jdata.groups;
+             from(teams)
+                            .pipe(
+                                filter((team)=>(team.name.localeCompare(country)==0)),
+                                map((x)=>x.id)
+                            )
+                            .subscribe((value)=>{teamId=value;});
+         
+            console.log(teamId);
+            var selectedGroup;
+
+            var groupArr=[];
+            groupArr.push(groups.a);
+            groupArr.push(groups.b);
+            groupArr.push(groups.c);
+            groupArr.push(groups.d);
+            groupArr.push(groups.e);
+            groupArr.push(groups.f);
+            groupArr.push(groups.g);
+            groupArr.push(groups.h);
+
+            var flag;   
+
+            from(groupArr)
+                 .pipe(
+                     filter((g)=>
+                        from(g.matches)
+                            .pipe(
+                               filter((m)=>m.home_team==teamId),
+                               take(1) 
+                            ).subscribe((m)=>selectedGroup=g)
+                     )
+                 ).subscribe((g)=>flag=g);
+
+                 console.log(selectedGroup);
+            
+         var groupName = selectedGroup.name;
+        
+         var matches = selectedGroup.matches;
+         var t1 = matches[0].home_team;
+         var t2 = matches[0].away_team;
+         var t3 = matches[1].home_team;
+         var t4 = matches[1].away_team;
+
+         var countries =[];
+         var flags=[];
+
+         from(teams)
+              .pipe(
+                  filter((team)=>team.id==t1||team.id==t2||team.id==t3||team.id==t4)
+              ).subscribe((team)=>{countries.push(team.name);flags.push(team.flag)});
+        
+         $('#p').text(groupName);
+        for(i=0;i<4;i++){
+            var img =$('<img>',{"src":flags[i],
+                                "css":{
+                                    "width":"30px",
+                                    "height":"30px"
+                                }});
+            var td0 = $('<td>').append(img);
+            var td1 = $('<td>').text(countries[i]);
+            var tr = $('<tr>').append(td0).append(td1);
+            $('#table').append(tr);
+        }      
+
+                 
+
+        }
+       
+
+    </script>
+    
+</body>
+</html>

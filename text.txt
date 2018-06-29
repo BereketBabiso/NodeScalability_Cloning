@@ -1,0 +1,1 @@
+hello world. This lab demonstartes the use os streams(undirectional and duplext) in js.
